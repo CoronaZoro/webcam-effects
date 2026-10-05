@@ -1,0 +1,193 @@
+/* Base dark theme. All colours/spacing live in these tokens. */
+:root {
+  --bg: #0b0c0f;
+  --panel: rgba(18, 20, 26, 0.72);
+  --border: rgba(255, 255, 255, 0.1);
+  --text: #f2f3f5;
+  --text-dim: rgba(242, 243, 245, 0.6);
+  --accent: #7cc4ff;
+  --danger: #ff8a80;
+  --radius: 14px;
+  --font: Inter, -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", sans-serif;
+}
+
+* { box-sizing: border-box; margin: 0; }
+
+html, body {
+  height: 100%;
+  background: var(--bg);
+  color: var(--text);
+  font-family: var(--font);
+  overflow: hidden;
+}
+
+#stage {
+  position: fixed;
+  inset: 0;
+  display: grid;
+  place-items: center;
+}
+
+/* The canvas holds raw (un-mirrored) video so effect coordinates match the camera.
+   We flip it with CSS so you see yourself like a mirror. */
+#canvas {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  transform: scaleX(-1);
+}
+
+.card {
+  position: absolute;
+  display: grid;
+  gap: 0.75rem;
+  justify-items: center;
+  width: min(380px, calc(100vw - 32px));
+  padding: 2rem 1.75rem;
+  text-align: center;
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(20px);
+  transition: opacity 0.3s ease;
+}
+
+.card.hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+
+.card h1 {
+  font-size: 1.4rem;
+  font-weight: 600;
+  letter-spacing: -0.01em;
+}
+
+.card p {
+  font-size: 0.9rem;
+  line-height: 1.5;
+  color: var(--text-dim);
+}
+
+.card p.error { color: var(--danger); }
+
+button {
+  margin-top: 0.5rem;
+  padding: 0.65rem 1.4rem;
+  font: inherit;
+  font-weight: 500;
+  color: #06121c;
+  background: var(--accent);
+  border: 0;
+  border-radius: 999px;
+  cursor: pointer;
+  transition: transform 0.15s ease, opacity 0.15s ease;
+}
+
+button:hover { transform: translateY(-1px); }
+button:disabled { opacity: 0.5; cursor: default; transform: none; }
+
+/* ---------- HUD ---------- */
+.hud {
+  position: absolute;
+  left: 16px;
+  bottom: 16px;
+  display: grid;
+  gap: 0.6rem;
+  width: 220px;
+  padding: 0.85rem 1rem;
+  font-size: 0.75rem;
+  color: var(--text-dim);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  backdrop-filter: blur(20px);
+  transition: opacity 0.3s ease;
+}
+
+.hud.hidden { opacity: 0; pointer-events: none; }
+
+.hud-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 0.75rem;
+}
+
+.meter {
+  position: relative;
+  height: 6px;
+  background: rgba(255, 255, 255, 0.1);
+  border-radius: 999px;
+}
+
+#meter-fill {
+  height: 100%;
+  width: 0;
+  background: var(--accent);
+  border-radius: 999px;
+}
+
+#meter-threshold {
+  position: absolute;
+  top: -3px;
+  width: 2px;
+  height: 12px;
+  background: var(--text);
+  border-radius: 1px;
+}
+
+button.ghost {
+  margin: 0;
+  padding: 0.3rem 0.8rem;
+  font-size: 0.75rem;
+  color: var(--text);
+  background: rgba(255, 255, 255, 0.08);
+  border: 1px solid var(--border);
+}
+
+input[type="range"] {
+  width: 110px;
+  accent-color: var(--accent);
+}
+
+/* ---------- Toast ---------- */
+.toast {
+  position: absolute;
+  top: 24px;
+  left: 50%;
+  padding: 0.5rem 1.1rem;
+  font-size: 0.85rem;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  backdrop-filter: blur(20px);
+  opacity: 0;
+  transform: translate(-50%, -8px);
+  transition: opacity 0.25s ease, transform 0.25s ease;
+  pointer-events: none;
+}
+
+.toast.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- Hint ---------- */
+.hint {
+  position: absolute;
+  bottom: 28px;
+  left: 50%;
+  padding: 0.6rem 1.2rem;
+  font-size: 0.9rem;
+  color: var(--text);
+  background: var(--panel);
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  backdrop-filter: blur(20px);
+  opacity: 0;
+  transform: translate(-50%, 8px);
+  transition: opacity 0.4s ease, transform 0.4s ease;
+  pointer-events: none;
+  white-space: nowrap;
+}
+
+.hint.show { opacity: 1; transform: translate(-50%, 0); }

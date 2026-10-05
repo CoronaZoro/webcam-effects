@@ -1,0 +1,43 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Webcam Effects</title>
+    <link rel="stylesheet" href="/src/ui/styles.css" />
+  </head>
+  <body>
+    <main id="stage">
+      <!-- Hidden <video> receives the webcam stream; we copy each frame onto the canvas. -->
+      <video id="video" playsinline muted hidden></video>
+      <canvas id="canvas"></canvas>
+
+      <!-- Start / error card. Shown until the camera is running. -->
+      <section id="card" class="card">
+        <h1>Webcam Effects</h1>
+        <p id="card-text">Camera and microphone stay in your browser. Nothing is uploaded.</p>
+        <button id="start-btn" type="button">Start camera</button>
+      </section>
+
+      <!-- Heads-up display (shown once the camera is running). -->
+      <aside id="hud" class="hud hidden">
+        <div class="meter" title="Low-frequency mic level. The tick is the blow threshold.">
+          <div id="meter-fill"></div>
+          <div id="meter-threshold"></div>
+        </div>
+        <div class="hud-row">
+          <span id="mic-status">Mic off</span>
+          <button id="calibrate-btn" class="ghost" type="button">Calibrate</button>
+        </div>
+        <div class="hud-row"><span id="hand-status">Hand: off</span></div>
+        <label class="hud-row">
+          <span>Sensitivity</span>
+          <input id="sensitivity" type="range" min="0" max="100" value="50" />
+        </label>
+      </aside>
+      <div id="hint" class="hint"></div>
+      <div id="toast" class="toast"></div>
+    </main>
+    <script type="module" src="/src/main.js"></script>
+  </body>
+</html>
