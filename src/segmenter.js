@@ -7,9 +7,11 @@ const MODEL_PATH = "/mediapipe/selfie_segmenter.tflite";
 
 // The model gives a soft 0..1 "person-ness" per pixel. We squash it so edges are
 // clean but still soft: below EDGE_LOW = background, above EDGE_HIGH = person.
-const EDGE_LOW = 0.35;
-const EDGE_HIGH = 0.65;
-const FEATHER_PX = 6;            // extra blur when scaling the mask up = soft edge
+// Lower values grow the mask outward a little, so hair wisps and clothing edges are covered.
+const EDGE_LOW = 0.2;
+const EDGE_HIGH = 0.5;
+const FEATHER_PX = 8;            // extra blur when scaling the mask up = soft edge
+const TEMPORAL_SPEED = 0.5;      // 1 = use each new frame as-is, lower = steadier mask (less edge flicker)
 const DEBUG_COLOR = "rgb(60, 255, 150)";
 const DEBUG_ALPHA = 0.5;
 
@@ -33,6 +35,7 @@ export async function createSegmenter(width, height) {
   let tileCtx = null;
   let tileImage = null;
 
+  let smoothed = null; // the mask averaged over recent frames
   let lastVideoTime = -1;
   let cornerAverage = 0; // running average of the top corners, used to detect an inverted mask
 
@@ -72,10 +75,13 @@ export async function createSegmenter(width, height) {
         tileCtx = tile.getContext("2d");
         tileImage = tileCtx.createImageData(w, h);
       }
+      if (!smoothed) smoothed = new Float32Array(values.length);
       const inverted = isInverted(values, w);
       const data = tileImage.data;
       for (let i = 0; i < values.length; i++) {
-        const v = inverted ? 1 - values[i] : values[i];
+        const raw = inverted ? 1 - values[i] : values[i];
+        smoothed[i] += (raw - smoothed[i]) * TEMPORAL_SPEED;
+        const v = smoothed[i];
         data[i * 4] = data[i * 4 + 1] = data[i * 4 + 2] = 255;
         data[i * 4 + 3] = smoothstep(v) * 255;
       }

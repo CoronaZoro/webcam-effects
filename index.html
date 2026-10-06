@@ -21,6 +21,10 @@
 
       <!-- Heads-up display (shown once the camera is running). -->
       <aside id="hud" class="hud hidden">
+        <label class="hud-row">
+          <span>Audio triggers (A)</span>
+          <input id="audio-triggers" type="checkbox" checked />
+        </label>
         <div class="meter" title="Low-frequency mic level. The tick is the blow threshold.">
           <div id="meter-fill"></div>
           <div id="meter-threshold"></div>
@@ -50,6 +54,10 @@
         <label class="hud-row">
           <span>Snap needs hand</span>
           <input id="snap-needs-hand" type="checkbox" checked />
+        </label>
+        <label class="hud-row">
+          <span>Vanish strength</span>
+          <input id="vanish-strength" type="range" min="30" max="100" value="100" />
         </label>
         <div class="hud-row"><span id="invisible-status">Invisible: off</span></div>
       </aside>

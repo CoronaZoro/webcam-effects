@@ -113,3 +113,31 @@ export const snapNeedsHandChecked = () => snapNeedsHand.checked;
 export function setInvisibleStatus(isInvisible) {
   invisibleStatus.textContent = isInvisible ? "Invisible: on" : "Invisible: off";
 }
+
+// How completely you vanish: 1 = gone, lower = see-through ghost.
+const vanishStrength = document.getElementById("vanish-strength");
+let vanishListener = null;
+
+export function onVanishStrength(fn) {
+  vanishListener = fn;
+  vanishStrength.addEventListener("input", () => fn(vanishStrength.value / 100));
+}
+
+// Called once the effect exists so it picks up the slider's starting value.
+export function applyVanishStrength() {
+  vanishListener?.(vanishStrength.value / 100);
+}
+
+// ---- Audio triggers on/off ----
+// When off, blowing and snapping do nothing; the keyboard shortcuts still work.
+const audioTriggers = document.getElementById("audio-triggers");
+
+export const audioTriggersOn = () => audioTriggers.checked;
+
+export function toggleAudioTriggers() {
+  audioTriggers.checked = !audioTriggers.checked;
+  flash(audioTriggers.checked ? "Audio triggers on" : "Audio triggers off (keys only)");
+}
+
+// Un-focus after a click so Space doesn't re-toggle the checkbox.
+audioTriggers.addEventListener("change", () => audioTriggers.blur());

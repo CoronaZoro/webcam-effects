@@ -29,17 +29,27 @@ function triggerFog() {
   fog?.trigger();
 }
 
+// Detectors call these. They respect the "Audio triggers" switch; the keyboard keys do not.
+const onBlowDetected = () => hud.audioTriggersOn() && triggerFog();
+
 // ---- Snap ----
 const HAND_RECENT_MS = 700; // a snapping hand is often blurry, so accept a hand seen a moment ago
 let lastHandSeen = -Infinity;
 
 function toggleInvisible() {
+  if (!invisibility) return;
+  // Only block turning it ON; turning it off must always work.
+  if (!invisibility.isInvisible()) {
+    if (!invisibility.hasBackground()) return hud.flash("Capture the background first (B)");
+    if (!segmenter) return hud.flash("Person model still loading…");
+  }
   const on = invisibility?.toggle();
   hud.setInvisibleStatus(on);
   hud.flash(on ? "Poof! Invisible" : "Back again");
 }
 
 function onSnap() {
+  if (!hud.audioTriggersOn()) return;
   const handRecent = performance.now() - lastHandSeen < HAND_RECENT_MS;
   if (hud.snapNeedsHandChecked() && !handRecent) {
     hud.flash("Snap heard, but no hand seen");
@@ -48,12 +58,13 @@ function onSnap() {
   toggleInvisible();
 }
 
-const audio = createAudio({ onBlow: triggerFog, onSnap });
+const audio = createAudio({ onBlow: onBlowDetected, onSnap });
 
 bindKeys({
   f: triggerFog,
   c: () => fog?.clear(),
   d: toggleMaskDebug,
+  a: hud.toggleAudioTriggers,
   b: captureBackground,
   " ": toggleInvisible,
 });
@@ -82,6 +93,7 @@ hud.onCalibrate(() => {
 });
 hud.onSensitivity((value) => audio.setSensitivity(value));
 hud.onSnapSensitivity((value) => audio.setSnapSensitivity(value));
+hud.onVanishStrength((value) => invisibility?.setStrength(value));
 
 // ---- Startup ----
 async function start() {
@@ -94,6 +106,7 @@ async function start() {
     canvas.height = video.videoHeight;
     fog = createFog(canvas.width, canvas.height);
     invisibility = createInvisibility(canvas.width, canvas.height);
+    hud.applyVanishStrength();
     card.classList.add("hidden");
     hud.showHud();
     requestAnimationFrame(draw);
@@ -154,13 +167,15 @@ function draw(now) {
     : null
   );
 
+  // Invisibility goes on top of the video, fog goes on top of that.
+  invisibility.update(dt);
+  if (segmenter && (showMask || invisibility.needsMask())) segmenter.update(video);
+  invisibility.render(ctx, segmenter?.mask, video);
+
   fog.update(dt);
   fog.render(ctx, video, cursor);
 
-  if (showMask) {
-    segmenter.update(video);
-    segmenter.drawDebug(ctx);
-  }
+  if (showMask) segmenter.drawDebug(ctx);
 
   const mic = audio.update(now);
   if (mic.ready) {

@@ -44,6 +44,7 @@ macOS notes: OBS needs a one-time system extension approval (do it before demo d
 | `Space` | Toggle invisible/visible (same as snap) |
 | `B` | Capture background (3s countdown, step out of frame) |
 | `H` | Hide/show all UI (clean mode for OBS) |
+| `A` | Audio triggers on/off (blow + snap detection). Keys always work |
 | `D` | Debug: tint the detected person green (mask view) |
 
 ## Design direction
@@ -118,7 +119,7 @@ Each step ends with: summary of what changed, how to test, and a pause for confi
 - [x] **7. Person segmentation.** Image Segmenter, feathered mask (debug view to verify).
 - [x] **8. Background capture.** `B` with 3s countdown, stored background frame.
 - [x] **9. Snap detection.** Audio transient + hand-visible check, audio-only toggle, `Space` fallback.
-- [ ] **10. Invisibility toggle.** Composite background vs live via mask, soft transition.
+- [x] **10. Invisibility toggle.** Composite background vs live via mask, soft transition.
 - [ ] **11. Polish effect 2.** Edge quality, transition animation, stability.
 - [ ] **12. Mode switcher UI + `H` clean mode.** Final dark minimal UI, hints, indicators.
 - [ ] **13. OBS test.** Verify OBS Virtual Camera in Google Meet on the MacBook.
@@ -127,6 +128,8 @@ Each step ends with: summary of what changed, how to test, and a pause for confi
 Order note: effect 1 is fully finished (steps 1-6) before touching effect 2.
 
 ## Decisions log
+
+- Invisibility: stored background is colour-matched to the live video each 250 ms (per-channel gain from non-person pixels) because webcam auto-exposure shifts when the person enters frame. Vanish strength slider (30-100%, default 100%). Segmentation mask is grown slightly (smoothstep 0.2..0.5), feathered 8 px and averaged over frames to cover hair wisps and reduce edge flicker.
 
 - Snap detection: second AnalyserNode (no smoothing), 2-8 kHz band. Onset = level jumps above a slowly-tracked baseline; confirmed if it falls back within ~120 ms (sustained sounds rejected after 400 ms). Needs a hand seen in the last 700 ms unless "Snap needs hand" is unticked. `Space` calls the same toggle.
 
