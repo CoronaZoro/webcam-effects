@@ -25,12 +25,26 @@ let invisibility = null;
 let segmenter = null;
 let showMask = false; // debug view: tint the detected person green
 
+// ---- Modes ----
+// Two effects, one at a time. Keys switch mode automatically, so a key press always does what it says.
+let mode = "fog";
+
+function setMode(next) {
+  if (next === mode) return;
+  mode = next;
+  hud.setMode(mode);
+  if (mode === "fog" && invisibility?.isInvisible()) toggleInvisible(); // bring the person back
+  if (mode === "vanish") fog?.clear();
+}
+
 function triggerFog() {
+  setMode("fog");
   fog?.trigger();
 }
 
-// Detectors call these. They respect the "Audio triggers" switch; the keyboard keys do not.
-const onBlowDetected = () => hud.audioTriggersOn() && triggerFog();
+// Detectors call these. They respect the "Audio triggers" switch and only act in their own mode;
+// the keyboard keys always work.
+const onBlowDetected = () => hud.audioTriggersOn() && mode === "fog" && triggerFog();
 
 // ---- Snap ----
 const HAND_RECENT_MS = 700; // a snapping hand is often blurry, so accept a hand seen a moment ago
@@ -48,8 +62,13 @@ function toggleInvisible() {
   hud.flash(on ? "Poof! Invisible" : "Back again");
 }
 
+function toggleInvisibleKey() {
+  setMode("vanish");
+  toggleInvisible();
+}
+
 function onSnap() {
-  if (!hud.audioTriggersOn()) return;
+  if (!hud.audioTriggersOn() || mode !== "vanish") return;
   const handRecent = performance.now() - lastHandSeen < HAND_RECENT_MS;
   if (hud.snapNeedsHandChecked() && !handRecent) {
     hud.flash("Snap heard, but no hand seen");
@@ -66,7 +85,10 @@ bindKeys({
   d: toggleMaskDebug,
   a: hud.toggleAudioTriggers,
   b: captureBackground,
-  " ": toggleInvisible,
+  " ": toggleInvisibleKey,
+  h: hud.toggleClean,
+  1: () => setMode("fog"),
+  2: () => setMode("vanish"),
 });
 
 const COUNTDOWN_SECONDS = 3;
@@ -74,6 +96,7 @@ const COUNTDOWN_SECONDS = 3;
 // Give the presenter time to step out of the frame, then save what the camera sees.
 function captureBackground() {
   if (!invisibility) return;
+  setMode("vanish");
   hud.startCountdown(COUNTDOWN_SECONDS, () => {
     invisibility.captureBackground(video);
     hud.setBackgroundPreview(invisibility.background);
@@ -88,6 +111,7 @@ function toggleMaskDebug() {
 }
 
 hud.onCapture(captureBackground);
+hud.onModeClick(setMode);
 hud.onCalibrate(() => {
   audio.calibrate();
 });
@@ -138,6 +162,16 @@ async function start() {
   }
 }
 
+// Instruction shown at the bottom of the screen for the current mode and state.
+function currentHint() {
+  if (mode === "fog") {
+    if (!fog.isActive()) return "Blow into the mic to fog the glass (or press F)";
+    return hasWiped ? null : "Now draw with your index finger";
+  }
+  if (!invisibility.hasBackground()) return "Press B, then step out of the frame to capture the background";
+  return invisibility.isInvisible() ? "Snap again to reappear" : "Snap your fingers to vanish (or press Space)";
+}
+
 // Runs every frame (~60x per second).
 let lastFrame = 0;
 let hasWiped = false; // hide the "draw" hint once the user has drawn
@@ -162,11 +196,7 @@ function draw(now) {
     hud.setHandStatus(hand.visible ? (hand.pointing ? "Pointing" : "Hand seen") : "No hand");
   }
 
-  hud.setHint(
-    !fog.isActive() ? "Blow into the mic to fog the glass (or press F)"
-    : !hasWiped ? "Now draw with your index finger"
-    : null
-  );
+  hud.setHint(currentHint());
 
   // Invisibility goes on top of the video, fog goes on top of that.
   invisibility.update(dt);

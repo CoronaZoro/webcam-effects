@@ -120,14 +120,17 @@ Each step ends with: summary of what changed, how to test, and a pause for confi
 - [x] **8. Background capture.** `B` with 3s countdown, stored background frame.
 - [x] **9. Snap detection.** Audio transient + hand-visible check, audio-only toggle, `Space` fallback.
 - [x] **10. Invisibility toggle.** Composite background vs live via mask, soft transition.
-- [ ] **11. Polish effect 2.** Edge quality, transition animation, stability.
-- [ ] **12. Mode switcher UI + `H` clean mode.** Final dark minimal UI, hints, indicators.
+- [x] **11. Polish effect 2.** Edge quality, transition animation, stability.
+- [x] **12. Mode switcher UI + `H` clean mode.** Final dark minimal UI, hints, indicators.
 - [ ] **13. OBS test.** Verify OBS Virtual Camera in Google Meet on the MacBook.
 - [ ] **14. Deploy.** Git + GitHub + Vercel, check HTTPS permissions on the live link.
 
 Order note: effect 1 is fully finished (steps 1-6) before touching effect 2.
 
 ## Decisions log
+
+- Modes: Fog and Vanish run one at a time. Switching to Fog brings the person back; switching to Vanish clears fog. Blow only acts in Fog mode, snap only in Vanish mode (audio triggers), while keys always work and switch mode automatically (`F` -> Fog, `Space`/`B` -> Vanish). `H` toggles clean view (`body.clean` hides every panel). HUD status always visible; sliders live in a collapsed "Tuning" section; controls shown depend on mode (`.only-fog` / `.only-vanish` + `body[data-mode]`).
+- Mask edge: model output (256x256) is bilinearly re-sampled to 512 wide, then thresholded, then 3 px blur. SVG filters and per-cell local colour matching were tried and rejected (laggy, shadow got worse).
 
 - Invisibility: stored background is colour-matched to the live video each 250 ms (per-channel gain from non-person pixels) because webcam auto-exposure shifts when the person enters frame. Vanish strength slider (30-100%, default 100%). Segmentation mask is grown slightly (smoothstep 0.2..0.5), feathered 8 px and averaged over frames to cover hair wisps and reduce edge flicker.
 
