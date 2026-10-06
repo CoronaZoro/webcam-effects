@@ -44,6 +44,7 @@ macOS notes: OBS needs a one-time system extension approval (do it before demo d
 | `Space` | Toggle invisible/visible (same as snap) |
 | `B` | Capture background (3s countdown, step out of frame) |
 | `H` | Hide/show all UI (clean mode for OBS) |
+| `D` | Debug: tint the detected person green (mask view) |
 
 ## Design direction
 
@@ -114,7 +115,7 @@ Each step ends with: summary of what changed, how to test, and a pause for confi
 - [x] **4. Fog overlay.** Blur + white tint layer fades in on blow; `C` clears; slow regrow.
 - [x] **5. Hand tracking + finger wiping.** Hand Landmarker, index fingertip brush wipes fog; self-hosted model files.
 - [x] **6. Polish effect 1.** Fog texture/grain, soft brush edge, re-blow behaviour, hint text, performance check.
-- [ ] **7. Person segmentation.** Image Segmenter, feathered mask (debug view to verify).
+- [x] **7. Person segmentation.** Image Segmenter, feathered mask (debug view to verify).
 - [ ] **8. Background capture.** `B` with 3s countdown, stored background frame.
 - [ ] **9. Snap detection.** Audio transient + hand-visible check, audio-only toggle, `Space` fallback.
 - [ ] **10. Invisibility toggle.** Composite background vs live via mask, soft transition.
@@ -126,6 +127,8 @@ Each step ends with: summary of what changed, how to test, and a pause for confi
 Order note: effect 1 is fully finished (steps 1-6) before touching effect 2.
 
 ## Decisions log
+
+- Segmenter: `selfie_segmenter.tflite` (float16), self-hosted. Mask = soft confidence squashed with smoothstep (0.35..0.65) then blurred 6 px for a feathered edge. The model's output polarity is auto-detected from the top corners (should be background), so it works either way. Mask only computed while needed (debug view now; invisibility later).
 
 - Wipe rule: brush follows the index fingertip whenever the index is extended (tip farther from wrist than the middle joint). A fist does not wipe. No strict "pointing" gesture, per presenter preference.
 - Hand model + wasm are self-hosted in `public/mediapipe/` (hand_landmarker.task float16, ~7.8 MB; wasm folder copied from node_modules).

@@ -3,6 +3,7 @@
 import { startCamera } from "./camera.js";
 import { createAudio } from "./audio.js";
 import { createHands } from "./hands.js";
+import { createSegmenter } from "./segmenter.js";
 import { bindKeys } from "./keys.js";
 import { createFog } from "./effects/fog.js";
 import * as hud from "./ui/hud.js";
@@ -19,6 +20,8 @@ const DEFAULT_CARD_TEXT = cardText.textContent;
 // ---- Triggers: called by the detector AND by the keyboard fallback ----
 let fog = null;   // created once we know the camera's resolution
 let hands = null; // created in the background (the model takes a moment to load)
+let segmenter = null;
+let showMask = false; // debug view: tint the detected person green
 
 function triggerFog() {
   fog?.trigger();
@@ -29,7 +32,14 @@ const audio = createAudio({ onBlow: triggerFog });
 bindKeys({
   f: triggerFog,
   c: () => fog?.clear(),
+  d: toggleMaskDebug,
 });
+
+function toggleMaskDebug() {
+  if (!segmenter) return hud.flash("Person model still loading…");
+  showMask = !showMask;
+  hud.flash(showMask ? "Mask view on" : "Mask view off");
+}
 
 hud.onCalibrate(() => {
   audio.calibrate();
@@ -62,6 +72,11 @@ async function start() {
   createHands()
     .then((h) => { hands = h; })
     .catch(() => hud.setHandStatus("Hand tracking failed"));
+
+  // Person segmentation also loads in the background.
+  createSegmenter(canvas.width, canvas.height)
+    .then((s) => { segmenter = s; })
+    .catch((err) => console.error("Segmenter failed", err));
 
   // Mic is optional: if it fails, the camera still works and F still triggers fog.
   try {
@@ -102,6 +117,11 @@ function draw(now) {
 
   fog.update(dt);
   fog.render(ctx, video, cursor);
+
+  if (showMask) {
+    segmenter.update(video);
+    segmenter.drawDebug(ctx);
+  }
 
   const mic = audio.update(now);
   if (mic.ready) {
