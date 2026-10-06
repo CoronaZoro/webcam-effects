@@ -10,7 +10,8 @@ const MODEL_PATH = "/mediapipe/selfie_segmenter.tflite";
 // Lower values grow the mask outward a little, so hair wisps and clothing edges are covered.
 const EDGE_LOW = 0.2;
 const EDGE_HIGH = 0.5;
-const FEATHER_PX = 8;            // extra blur when scaling the mask up = soft edge
+const FEATHER_PX = 3;            // light blur on the final mask = soft but crisp edge
+const REFINED_WIDTH = 512;       // the mask is re-sampled at this width before the edge is cut (see update)
 const TEMPORAL_SPEED = 0.5;      // 1 = use each new frame as-is, lower = steadier mask (less edge flicker)
 const DEBUG_COLOR = "rgb(60, 255, 150)";
 const DEBUG_ALPHA = 0.5;
@@ -30,19 +31,46 @@ export async function createSegmenter(width, height) {
   const debugLayer = makeCanvas(width, height);
   const debugCtx = debugLayer.getContext("2d");
 
-  // The model's own output is small (256x256). We fill this tile, then scale it up.
-  let tile = null;
-  let tileCtx = null;
-  let tileImage = null;
+  // The model's own output is small (256x256) and blocky when stretched to the full frame.
+  // We first re-sample it to a finer grid (REFINED_WIDTH wide) with smooth interpolation, THEN
+  // apply the threshold. Cutting the edge on the smooth version gives a curved contour instead
+  // of stair-steps. `tile` is that finer grid.
+  const refinedHeight = Math.round((REFINED_WIDTH * height) / width);
+  const tile = makeCanvas(REFINED_WIDTH, refinedHeight);
+  const tileCtx = tile.getContext("2d");
+  const tileImage = tileCtx.createImageData(REFINED_WIDTH, refinedHeight);
+  for (let i = 0; i < tileImage.data.length; i += 4) {
+    tileImage.data[i] = tileImage.data[i + 1] = tileImage.data[i + 2] = 255; // white; only alpha changes
+  }
+  let grid = null; // where each refined pixel samples from in the model's output
+  let edgeOffset = 0; // Mask edge slider: moves the threshold to grow (-) or shrink (+) the mask
 
   let smoothed = null; // the mask averaged over recent frames
   let lastVideoTime = -1;
   let cornerAverage = 0; // running average of the top corners, used to detect an inverted mask
 
   const smoothstep = (v) => {
-    const t = Math.min(1, Math.max(0, (v - EDGE_LOW) / (EDGE_HIGH - EDGE_LOW)));
+    const low = EDGE_LOW + edgeOffset;
+    const t = Math.min(1, Math.max(0, (v - low) / (EDGE_HIGH - EDGE_LOW)));
     return t * t * (3 - 2 * t);
   };
+
+  // For every refined pixel, work out which 4 model pixels surround it and how much of each to mix.
+  function buildGrid(w, h) {
+    const columns = new Array(REFINED_WIDTH);
+    for (let x = 0; x < REFINED_WIDTH; x++) {
+      const at = Math.min(w - 1, Math.max(0, ((x + 0.5) * w) / REFINED_WIDTH - 0.5));
+      const x0 = Math.floor(at);
+      columns[x] = { x0, x1: Math.min(w - 1, x0 + 1), fx: at - x0 };
+    }
+    const rows = new Array(refinedHeight);
+    for (let y = 0; y < refinedHeight; y++) {
+      const at = Math.min(h - 1, Math.max(0, ((y + 0.5) * h) / refinedHeight - 0.5));
+      const y0 = Math.floor(at);
+      rows[y] = { y0, y1: Math.min(h - 1, y0 + 1), fy: at - y0 };
+    }
+    return { w, h, columns, rows };
+  }
 
   // Which way round is the model's mask? Top corners of a webcam shot are almost always
   // background, so if they come out "person", the mask is inverted and we flip it.
@@ -70,25 +98,35 @@ export async function createSegmenter(width, height) {
       const h = person.height;
       const values = person.getAsFloat32Array();
 
-      if (!tile) {
-        tile = makeCanvas(w, h);
-        tileCtx = tile.getContext("2d");
-        tileImage = tileCtx.createImageData(w, h);
-      }
       if (!smoothed) smoothed = new Float32Array(values.length);
+      if (!grid) grid = buildGrid(w, h);
+
+      // 1. Average the model's output over the last few frames (steadier edge).
       const inverted = isInverted(values, w);
-      const data = tileImage.data;
       for (let i = 0; i < values.length; i++) {
         const raw = inverted ? 1 - values[i] : values[i];
         smoothed[i] += (raw - smoothed[i]) * TEMPORAL_SPEED;
-        const v = smoothed[i];
-        data[i * 4] = data[i * 4 + 1] = data[i * 4 + 2] = 255;
-        data[i * 4 + 3] = smoothstep(v) * 255;
+      }
+
+      // 2. Re-sample to the finer grid with smooth interpolation, then cut the edge.
+      const data = tileImage.data;
+      let out = 3; // alpha byte of the first pixel
+      for (let y = 0; y < refinedHeight; y++) {
+        const { y0, y1, fy } = grid.rows[y];
+        const top = y0 * w;
+        const bottom = y1 * w;
+        for (let x = 0; x < REFINED_WIDTH; x++) {
+          const { x0, x1, fx } = grid.columns[x];
+          const upper = smoothed[top + x0] * (1 - fx) + smoothed[top + x1] * fx;
+          const lower = smoothed[bottom + x0] * (1 - fx) + smoothed[bottom + x1] * fx;
+          data[out] = smoothstep(upper * (1 - fy) + lower * fy) * 255;
+          out += 4;
+        }
       }
       tileCtx.putImageData(tileImage, 0, 0);
     });
 
-    if (!tile) return;
+    if (!grid) return;
     maskCtx.clearRect(0, 0, width, height);
     maskCtx.filter = `blur(${FEATHER_PX}px)`;
     maskCtx.drawImage(tile, 0, 0, width, height);
@@ -107,7 +145,9 @@ export async function createSegmenter(width, height) {
     ctx.globalAlpha = 1;
   }
 
-  return { update, drawDebug, mask };
+  const setEdge = (value) => { edgeOffset = value; };
+
+  return { update, drawDebug, setEdge, mask };
 }
 
 function makeCanvas(w, h) {

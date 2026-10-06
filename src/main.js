@@ -94,6 +94,7 @@ hud.onCalibrate(() => {
 hud.onSensitivity((value) => audio.setSensitivity(value));
 hud.onSnapSensitivity((value) => audio.setSnapSensitivity(value));
 hud.onVanishStrength((value) => invisibility?.setStrength(value));
+hud.onMaskEdge((value) => segmenter?.setEdge(value));
 
 // ---- Startup ----
 async function start() {
@@ -126,7 +127,7 @@ async function start() {
 
   // Person segmentation also loads in the background.
   createSegmenter(canvas.width, canvas.height)
-    .then((s) => { segmenter = s; })
+    .then((s) => { segmenter = s; hud.applyMaskEdge(); })
     .catch((err) => console.error("Segmenter failed", err));
 
   // Mic is optional: if it fails, the camera still works and F still triggers fog.

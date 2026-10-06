@@ -141,3 +141,18 @@ export function toggleAudioTriggers() {
 
 // Un-focus after a click so Space doesn't re-toggle the checkbox.
 audioTriggers.addEventListener("change", () => audioTriggers.blur());
+
+// Mask edge slider: -1 grows the cut-out, +1 shrinks it. We map it to a small threshold shift.
+const maskEdge = document.getElementById("mask-edge");
+const MASK_EDGE_RANGE = 0.15;
+let maskEdgeListener = null;
+
+export function onMaskEdge(fn) {
+  maskEdgeListener = fn;
+  maskEdge.addEventListener("input", () => fn((maskEdge.value / 100) * MASK_EDGE_RANGE));
+}
+
+// Called once the segmenter exists so it picks up the slider's starting value.
+export function applyMaskEdge() {
+  maskEdgeListener?.((maskEdge.value / 100) * MASK_EDGE_RANGE);
+}
