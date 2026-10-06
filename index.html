@@ -36,9 +36,22 @@
         </div>
         <canvas id="background-thumb" class="thumb hidden" width="160" height="90"></canvas>
         <label class="hud-row">
-          <span>Sensitivity</span>
+          <span>Blow sensitivity</span>
           <input id="sensitivity" type="range" min="0" max="100" value="50" />
         </label>
+        <div class="meter" title="High-frequency mic level (snaps). The tick is the snap threshold.">
+          <div id="snap-fill"></div>
+          <div id="snap-threshold"></div>
+        </div>
+        <label class="hud-row">
+          <span>Snap sensitivity</span>
+          <input id="snap-sensitivity" type="range" min="0" max="100" value="50" />
+        </label>
+        <label class="hud-row">
+          <span>Snap needs hand</span>
+          <input id="snap-needs-hand" type="checkbox" checked />
+        </label>
+        <div class="hud-row"><span id="invisible-status">Invisible: off</span></div>
       </aside>
       <div id="countdown" class="countdown">
         <div id="countdown-number"></div>

@@ -117,7 +117,7 @@ Each step ends with: summary of what changed, how to test, and a pause for confi
 - [x] **6. Polish effect 1.** Fog texture/grain, soft brush edge, re-blow behaviour, hint text, performance check.
 - [x] **7. Person segmentation.** Image Segmenter, feathered mask (debug view to verify).
 - [x] **8. Background capture.** `B` with 3s countdown, stored background frame.
-- [ ] **9. Snap detection.** Audio transient + hand-visible check, audio-only toggle, `Space` fallback.
+- [x] **9. Snap detection.** Audio transient + hand-visible check, audio-only toggle, `Space` fallback.
 - [ ] **10. Invisibility toggle.** Composite background vs live via mask, soft transition.
 - [ ] **11. Polish effect 2.** Edge quality, transition animation, stability.
 - [ ] **12. Mode switcher UI + `H` clean mode.** Final dark minimal UI, hints, indicators.
@@ -127,6 +127,8 @@ Each step ends with: summary of what changed, how to test, and a pause for confi
 Order note: effect 1 is fully finished (steps 1-6) before touching effect 2.
 
 ## Decisions log
+
+- Snap detection: second AnalyserNode (no smoothing), 2-8 kHz band. Onset = level jumps above a slowly-tracked baseline; confirmed if it falls back within ~120 ms (sustained sounds rejected after 400 ms). Needs a hand seen in the last 700 ms unless "Snap needs hand" is unticked. `Space` calls the same toggle.
 
 - Segmenter: `selfie_segmenter.tflite` (float16), self-hosted. Mask = soft confidence squashed with smoothstep (0.35..0.65) then blurred 6 px for a feathered edge. The model's output polarity is auto-detected from the top corners (should be background), so it works either way. Mask only computed while needed (debug view now; invisibility later).
 

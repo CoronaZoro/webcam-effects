@@ -17,5 +17,10 @@ export function createInvisibility(width, height) {
 
   const hasBackground = () => captured;
 
-  return { captureBackground, hasBackground, background };
+  // Invisible on/off. Snap (or Space) flips it. Step 10 makes it actually hide the person.
+  let invisible = false;
+  const toggle = () => (invisible = !invisible);
+  const isInvisible = () => invisible;
+
+  return { captureBackground, hasBackground, background, toggle, isInvisible };
 }

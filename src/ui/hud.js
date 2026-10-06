@@ -90,3 +90,26 @@ export function setBackgroundPreview(source) {
   thumb.classList.remove("hidden");
   backgroundStatus.textContent = "Background captured";
 }
+
+// ---- Snap ----
+const snapFill = document.getElementById("snap-fill");
+const snapThreshold = document.getElementById("snap-threshold");
+const snapSensitivity = document.getElementById("snap-sensitivity");
+const snapNeedsHand = document.getElementById("snap-needs-hand");
+const invisibleStatus = document.getElementById("invisible-status");
+
+export function setSnapMeter(level, threshold) {
+  snapFill.style.width = `${Math.min(1, level) * 100}%`;
+  snapThreshold.style.left = `${Math.min(1, threshold) * 100}%`;
+}
+
+export function onSnapSensitivity(fn) {
+  snapSensitivity.addEventListener("input", () => fn(snapSensitivity.value / 100));
+  fn(snapSensitivity.value / 100);
+}
+
+export const snapNeedsHandChecked = () => snapNeedsHand.checked;
+
+export function setInvisibleStatus(isInvisible) {
+  invisibleStatus.textContent = isInvisible ? "Invisible: on" : "Invisible: off";
+}

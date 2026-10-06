@@ -29,13 +29,33 @@ function triggerFog() {
   fog?.trigger();
 }
 
-const audio = createAudio({ onBlow: triggerFog });
+// ---- Snap ----
+const HAND_RECENT_MS = 700; // a snapping hand is often blurry, so accept a hand seen a moment ago
+let lastHandSeen = -Infinity;
+
+function toggleInvisible() {
+  const on = invisibility?.toggle();
+  hud.setInvisibleStatus(on);
+  hud.flash(on ? "Poof! Invisible" : "Back again");
+}
+
+function onSnap() {
+  const handRecent = performance.now() - lastHandSeen < HAND_RECENT_MS;
+  if (hud.snapNeedsHandChecked() && !handRecent) {
+    hud.flash("Snap heard, but no hand seen");
+    return;
+  }
+  toggleInvisible();
+}
+
+const audio = createAudio({ onBlow: triggerFog, onSnap });
 
 bindKeys({
   f: triggerFog,
   c: () => fog?.clear(),
   d: toggleMaskDebug,
   b: captureBackground,
+  " ": toggleInvisible,
 });
 
 const COUNTDOWN_SECONDS = 3;
@@ -61,6 +81,7 @@ hud.onCalibrate(() => {
   audio.calibrate();
 });
 hud.onSensitivity((value) => audio.setSensitivity(value));
+hud.onSnapSensitivity((value) => audio.setSnapSensitivity(value));
 
 // ---- Startup ----
 async function start() {
@@ -116,6 +137,7 @@ function draw(now) {
   let cursor = null;
   if (hands) {
     const hand = hands.detect(video);
+    if (hand.visible) lastHandSeen = performance.now();
     if (hand.visible && hand.pointing) {
       cursor = { x: hand.x * canvas.width, y: hand.y * canvas.height };
       fog.wipe(cursor.x, cursor.y);
@@ -143,6 +165,7 @@ function draw(now) {
   const mic = audio.update(now);
   if (mic.ready) {
     hud.setMeter(mic.low, mic.threshold);
+    hud.setSnapMeter(mic.high, mic.snapThreshold);
     hud.setMicStatus(mic.calibrating ? "Calibrating… stay quiet" : "Listening");
   }
 
