@@ -191,3 +191,40 @@ input[type="range"] {
 }
 
 .hint.show { opacity: 1; transform: translate(-50%, 0); }
+
+/* ---------- Background capture ---------- */
+.thumb {
+  width: 100%;
+  border-radius: 8px;
+  border: 1px solid var(--border);
+  transform: scaleX(-1); /* same mirrored view as the main canvas */
+}
+
+.thumb.hidden { display: none; }
+
+.countdown {
+  position: absolute;
+  inset: 0;
+  display: grid;
+  place-content: center;
+  justify-items: center;
+  gap: 0.5rem;
+  background: rgba(11, 12, 15, 0.45);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.25s ease;
+}
+
+.countdown.show { opacity: 1; }
+
+#countdown-number {
+  font-size: 9rem;
+  font-weight: 600;
+  line-height: 1;
+  letter-spacing: -0.04em;
+}
+
+.countdown p {
+  font-size: 1rem;
+  color: var(--text-dim);
+}

@@ -52,3 +52,41 @@ export function onSensitivity(fn) {
   sensitivity.addEventListener("input", () => fn(sensitivity.value / 100));
   fn(sensitivity.value / 100);
 }
+
+// ---- Background capture ----
+const countdown = document.getElementById("countdown");
+const countdownNumber = document.getElementById("countdown-number");
+const backgroundStatus = document.getElementById("background-status");
+const captureBtn = document.getElementById("capture-btn");
+const thumb = document.getElementById("background-thumb");
+
+let countdownTimer = null;
+
+export function onCapture(fn) {
+  captureBtn.addEventListener("click", fn);
+}
+
+// Big 3-2-1 overlay, then calls onDone. Calling again while running restarts it.
+export function startCountdown(seconds, onDone) {
+  clearInterval(countdownTimer);
+  let remaining = seconds;
+  countdownNumber.textContent = remaining;
+  countdown.classList.add("show");
+  countdownTimer = setInterval(() => {
+    remaining -= 1;
+    if (remaining > 0) {
+      countdownNumber.textContent = remaining;
+      return;
+    }
+    clearInterval(countdownTimer);
+    countdown.classList.remove("show");
+    onDone();
+  }, 1000);
+}
+
+// Show a small preview of the captured background in the panel.
+export function setBackgroundPreview(source) {
+  thumb.getContext("2d").drawImage(source, 0, 0, thumb.width, thumb.height);
+  thumb.classList.remove("hidden");
+  backgroundStatus.textContent = "Background captured";
+}

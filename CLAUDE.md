@@ -116,7 +116,7 @@ Each step ends with: summary of what changed, how to test, and a pause for confi
 - [x] **5. Hand tracking + finger wiping.** Hand Landmarker, index fingertip brush wipes fog; self-hosted model files.
 - [x] **6. Polish effect 1.** Fog texture/grain, soft brush edge, re-blow behaviour, hint text, performance check.
 - [x] **7. Person segmentation.** Image Segmenter, feathered mask (debug view to verify).
-- [ ] **8. Background capture.** `B` with 3s countdown, stored background frame.
+- [x] **8. Background capture.** `B` with 3s countdown, stored background frame.
 - [ ] **9. Snap detection.** Audio transient + hand-visible check, audio-only toggle, `Space` fallback.
 - [ ] **10. Invisibility toggle.** Composite background vs live via mask, soft transition.
 - [ ] **11. Polish effect 2.** Edge quality, transition animation, stability.

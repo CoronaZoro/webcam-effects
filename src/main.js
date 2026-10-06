@@ -6,6 +6,7 @@ import { createHands } from "./hands.js";
 import { createSegmenter } from "./segmenter.js";
 import { bindKeys } from "./keys.js";
 import { createFog } from "./effects/fog.js";
+import { createInvisibility } from "./effects/invisibility.js";
 import * as hud from "./ui/hud.js";
 
 const video = document.getElementById("video");
@@ -20,6 +21,7 @@ const DEFAULT_CARD_TEXT = cardText.textContent;
 // ---- Triggers: called by the detector AND by the keyboard fallback ----
 let fog = null;   // created once we know the camera's resolution
 let hands = null; // created in the background (the model takes a moment to load)
+let invisibility = null;
 let segmenter = null;
 let showMask = false; // debug view: tint the detected person green
 
@@ -33,7 +35,20 @@ bindKeys({
   f: triggerFog,
   c: () => fog?.clear(),
   d: toggleMaskDebug,
+  b: captureBackground,
 });
+
+const COUNTDOWN_SECONDS = 3;
+
+// Give the presenter time to step out of the frame, then save what the camera sees.
+function captureBackground() {
+  if (!invisibility) return;
+  hud.startCountdown(COUNTDOWN_SECONDS, () => {
+    invisibility.captureBackground(video);
+    hud.setBackgroundPreview(invisibility.background);
+    hud.flash("Background captured");
+  });
+}
 
 function toggleMaskDebug() {
   if (!segmenter) return hud.flash("Person model still loading…");
@@ -41,6 +56,7 @@ function toggleMaskDebug() {
   hud.flash(showMask ? "Mask view on" : "Mask view off");
 }
 
+hud.onCapture(captureBackground);
 hud.onCalibrate(() => {
   audio.calibrate();
 });
@@ -56,6 +72,7 @@ async function start() {
     canvas.width = video.videoWidth;
     canvas.height = video.videoHeight;
     fog = createFog(canvas.width, canvas.height);
+    invisibility = createInvisibility(canvas.width, canvas.height);
     card.classList.add("hidden");
     hud.showHud();
     requestAnimationFrame(draw);
