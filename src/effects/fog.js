@@ -105,13 +105,14 @@ export function createFog(width, height) {
     }
   }
 
-  // Draw the fog on top of whatever is already on `ctx`.
+  // Draw the fog on top of whatever is already on `ctx`. `source` is what gets frosted
+  // (pass the same canvas, so the fog covers the invisibility effect too).
   // `cursor` (optional, video pixels) draws a small ring showing where the brush is.
-  function render(ctx, video, cursor) {
+  function render(ctx, source, cursor) {
     if (phase === "idle") return;
 
     // Blurred, tinted video...
-    smallCtx.drawImage(video, 0, 0, small.width, small.height);
+    smallCtx.drawImage(source, 0, 0, small.width, small.height);
     fogCtx.globalCompositeOperation = "source-over";
     fogCtx.filter = `blur(${BLUR_PX}px) ${FOG_FILTER_EXTRA}`;
     fogCtx.drawImage(small, 0, 0, width, height);

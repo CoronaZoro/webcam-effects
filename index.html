@@ -6,7 +6,7 @@
     <title>Webcam Effects</title>
     <link rel="stylesheet" href="/src/ui/styles.css" />
   </head>
-  <body data-mode="fog">
+  <body>
     <main id="stage">
       <!-- Hidden <video> receives the webcam stream; we copy each frame onto the canvas. -->
       <video id="video" playsinline muted hidden></video>
@@ -19,12 +19,6 @@
         <button id="start-btn" type="button">Start camera</button>
       </section>
 
-      <!-- Mode switcher (top centre). Keys 1 / 2 do the same thing. -->
-      <nav id="modebar" class="modebar hidden" aria-label="Effect mode">
-        <button class="mode active" type="button" data-mode="fog"><kbd>1</kbd> Fog</button>
-        <button class="mode" type="button" data-mode="vanish"><kbd>2</kbd> Vanish</button>
-      </nav>
-
       <!-- Heads-up display (bottom left, shown once the camera is running). -->
       <aside id="hud" class="hud hidden">
         <label class="hud-row">
@@ -32,11 +26,11 @@
           <input id="audio-triggers" type="checkbox" checked />
         </label>
 
-        <div class="only-fog meter" title="Low-frequency mic level. The tick is the blow threshold.">
+        <div class="meter" title="Low-frequency mic level. The tick is the blow threshold.">
           <div id="meter-fill"></div>
           <div id="meter-threshold"></div>
         </div>
-        <div class="only-vanish meter" title="High-frequency mic level (snaps). The tick is the snap threshold.">
+        <div class="meter" title="High-frequency mic level (snaps). The tick is the snap threshold.">
           <div id="snap-fill"></div>
           <div id="snap-threshold"></div>
         </div>
@@ -47,32 +41,32 @@
         </div>
         <div class="hud-row"><span id="hand-status">Hand: off</span></div>
 
-        <div class="only-vanish hud-row">
+        <div class="hud-row">
           <span id="background-status">No background yet</span>
           <button id="capture-btn" class="ghost" type="button">Capture <kbd>B</kbd></button>
         </div>
-        <canvas id="background-thumb" class="only-vanish thumb hidden" width="160" height="90"></canvas>
-        <div class="only-vanish hud-row"><span id="invisible-status">Invisible: off</span></div>
+        <canvas id="background-thumb" class="thumb hidden" width="160" height="90"></canvas>
+        <div class="hud-row"><span id="invisible-status">Invisible: off</span></div>
 
         <details class="tuning">
           <summary>Tuning</summary>
-          <label class="only-fog hud-row">
+          <label class="hud-row">
             <span>Blow sensitivity</span>
             <input id="sensitivity" type="range" min="0" max="100" value="50" />
           </label>
-          <label class="only-vanish hud-row">
+          <label class="hud-row">
             <span>Snap sensitivity</span>
             <input id="snap-sensitivity" type="range" min="0" max="100" value="50" />
           </label>
-          <label class="only-vanish hud-row">
+          <label class="hud-row">
             <span>Snap needs hand</span>
             <input id="snap-needs-hand" type="checkbox" checked />
           </label>
-          <label class="only-vanish hud-row" title="Slide left to grow the cut-out, right to shrink it">
+          <label class="hud-row" title="Slide left to grow the cut-out, right to shrink it">
             <span>Mask edge</span>
             <input id="mask-edge" type="range" min="-100" max="100" value="0" />
           </label>
-          <label class="only-vanish hud-row">
+          <label class="hud-row">
             <span>Vanish strength</span>
             <input id="vanish-strength" type="range" min="30" max="100" value="100" />
           </label>

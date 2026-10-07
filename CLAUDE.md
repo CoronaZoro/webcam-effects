@@ -38,7 +38,6 @@ macOS notes: OBS needs a one-time system extension approval (do it before demo d
 
 | Key | Action |
 |---|---|
-| `1` / `2` | Switch to Fog mode / Invisibility mode |
 | `F` | Trigger fog (same as blowing) |
 | `C` | Clear fog |
 | `Space` | Toggle invisible/visible (same as snap) |
@@ -121,7 +120,7 @@ Each step ends with: summary of what changed, how to test, and a pause for confi
 - [x] **9. Snap detection.** Audio transient + hand-visible check, audio-only toggle, `Space` fallback.
 - [x] **10. Invisibility toggle.** Composite background vs live via mask, soft transition.
 - [x] **11. Polish effect 2.** Edge quality, transition animation, stability.
-- [x] **12. Mode switcher UI + `H` clean mode.** Final dark minimal UI, hints, indicators.
+- [x] **12. Panel UI + `H` clean mode** (mode switcher removed). Final dark minimal UI, hints, indicators.
 - [ ] **13. OBS test.** Verify OBS Virtual Camera in Google Meet on the MacBook.
 - [ ] **14. Deploy.** Git + GitHub + Vercel, check HTTPS permissions on the live link.
 
@@ -131,7 +130,7 @@ Order note: effect 1 is fully finished (steps 1-6) before touching effect 2.
 
 - OBS/Chrome: the effects page runs in a separate Chrome profile (`--user-data-dir=$HOME/.webcam-effects-chrome`) launched with no-throttle flags + `defaults write com.google.Chrome NSAppSleepDisabled -bool YES`, so it keeps rendering while covered.
 
-- Modes: Fog and Vanish run one at a time. Switching to Fog brings the person back; switching to Vanish clears fog. Blow only acts in Fog mode, snap only in Vanish mode (audio triggers), while keys always work and switch mode automatically (`F` -> Fog, `Space`/`B` -> Vanish). `H` toggles clean view (`body.clean` hides every panel). HUD status always visible; sliders live in a collapsed "Tuning" section; controls shown depend on mode (`.only-fog` / `.only-vanish` + `body[data-mode]`).
+- No modes: both effects are always available on one screen. Blow (or `F`) fogs, snap (or `Space`) vanishes, in any order or together. Fog frosts whatever is already on the canvas (video + invisibility), so a vanished person stays hidden under the fog. `H` toggles clean view (`body.clean` hides every panel). Panel status is always visible; sliders live in a collapsed "Tuning" section. (A mode switcher was tried in step 12 and removed: unnecessary.)
 - Mask edge: model output (256x256) is bilinearly re-sampled to 512 wide, then thresholded, then 3 px blur. SVG filters and per-cell local colour matching were tried and rejected (laggy, shadow got worse).
 
 - Invisibility: stored background is colour-matched to the live video each 250 ms (per-channel gain from non-person pixels) because webcam auto-exposure shifts when the person enters frame. Vanish strength slider (30-100%, default 100%). Segmentation mask is grown slightly (smoothstep 0.2..0.5), feathered 8 px and averaged over frames to cover hair wisps and reduce edge flicker.

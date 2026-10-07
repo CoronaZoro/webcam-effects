@@ -14,7 +14,6 @@ let toastTimer;
 
 export function showHud() {
   hud.classList.remove("hidden");
-  document.getElementById("modebar").classList.remove("hidden");
 }
 
 export function setMeter(level, threshold) {
@@ -158,23 +157,7 @@ export function applyMaskEdge() {
   maskEdgeListener?.((maskEdge.value / 100) * MASK_EDGE_RANGE);
 }
 
-// ---- Modes and clean view ----
-const modeButtons = document.querySelectorAll(".mode");
-const modebar = document.getElementById("modebar");
-
-// Which effect is active: "fog" or "vanish". CSS uses body[data-mode] to show the matching controls.
-export function setMode(mode) {
-  document.body.dataset.mode = mode;
-  modeButtons.forEach((button) => button.classList.toggle("active", button.dataset.mode === mode));
-}
-
-export function onModeClick(fn) {
-  modeButtons.forEach((button) => button.addEventListener("click", () => {
-    button.blur(); // so Space does not "click" it again
-    fn(button.dataset.mode);
-  }));
-}
-
+// ---- Clean view ----
 // Clean view: hides every panel so only the video is visible (for OBS / the audience).
 export function toggleClean() {
   document.body.classList.toggle("clean");
