@@ -129,6 +129,8 @@ Order note: effect 1 is fully finished (steps 1-6) before touching effect 2.
 
 ## Decisions log
 
+- OBS/Chrome: the effects page runs in a separate Chrome profile (`--user-data-dir=$HOME/.webcam-effects-chrome`) launched with no-throttle flags + `defaults write com.google.Chrome NSAppSleepDisabled -bool YES`, so it keeps rendering while covered.
+
 - Modes: Fog and Vanish run one at a time. Switching to Fog brings the person back; switching to Vanish clears fog. Blow only acts in Fog mode, snap only in Vanish mode (audio triggers), while keys always work and switch mode automatically (`F` -> Fog, `Space`/`B` -> Vanish). `H` toggles clean view (`body.clean` hides every panel). HUD status always visible; sliders live in a collapsed "Tuning" section; controls shown depend on mode (`.only-fog` / `.only-vanish` + `body[data-mode]`).
 - Mask edge: model output (256x256) is bilinearly re-sampled to 512 wide, then thresholded, then 3 px blur. SVG filters and per-cell local colour matching were tried and rejected (laggy, shadow got worse).
 
